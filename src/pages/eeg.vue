@@ -1,9 +1,10 @@
 <template>
   <div class="echarts-box">
-    <div
-      id="myEcharts"
-      :style="{ width: '1600px', height: 250 + 'px' }"
-    ></div>
+    <div id="myEcharts" :style="{ width: '1600px', height: 44 * channel.length + 100 + 'px' }">
+      <div>
+        <q-btn @click="aaa">click</q-btn>
+      </div>
+    </div>
     <div id="testtext"></div>
   </div>
 </template>
@@ -12,38 +13,36 @@
 import { onMounted, ref } from 'vue';
 import * as echarts from 'echarts';
 import axios from 'axios';
-// import json from "assets/10s.json";
-import json from 'assets/10s_1channel.json';
+import json from 'assets/10s.json';
+// import json from 'assets/10s_1channel.json';
 
 export default {
-  setup() {
+  setup () {
     // Channel Name
-    // const channel = [
-    //   "Fp1-A1",
-    //   "F3-A1",
-    //   "C3-A1",
-    //   "P3-A1",
-    //   "O1-A1",
-    //   "Fp2-A2",
-    //   "F4-A2",
-    //   "C4-A2",
-    //   "F4-A2",
-    //   "Q2-A2",
-    //   "F7-A1",
-    //   "T3-A1",
-    //   "T5-A1",
-    //   "F8-A2",
-    //   "T4-A2",
-    //   "T6-A2",
-    //   "F3",
-    //   "F4",
-    //   "PZ",
-    //   "Cz",
-    //   "Fz",
-    //   "ECG",
-    // ];
+    const channel = [
+      'Fp1-A1',
+      'F3-A1',
+      'C3-A1',
+      'P3-A1',
+      'O1-A1',
+      'Fp2-A2',
+      'F4-A2',
+      'C4-A2',
+      'F4-A2',
+      'Q2-A2',
+      'F7-A1',
+      'T3-A1',
+      'T5-A1',
+      'F8-A2',
+      'T4-A2',
+      'T6-A2',
+      'PZ',
+      'Cz',
+      'Fz',
+      'ECG',
+    ];
 
-    const channel = ['test1','test2','test3']
+    // const channel = ['test1','test2','test3']
     let select_start = ref(0);
     let select_end = ref(0);
     let ss_ing = ref('');
@@ -92,6 +91,9 @@ export default {
               boundaryGap: false,
               data: Convert_sec(512 * end_time),
               gridIndex: idx,
+              // interval: 0,
+              // min: 0,
+              // max: 5120,
             }),
             yAxis.push({
               show: false,
@@ -138,6 +140,9 @@ export default {
             boundaryGap: false,
             data: Convert_sec(512 * end_time),
             gridIndex: idx,
+            axisLine:{
+              show:true,
+            }
           });
           yAxis.push({
             show: false,
@@ -166,6 +171,18 @@ export default {
             smooth: true,
             xAxisIndex: idx,
             yAxisIndex: idx,
+            markLine: {
+              symbol: ['none', 'none'], // 去掉箭頭
+              lineStyle: {
+                type: 'dashed' // 線條樣式
+              },
+              data: [
+                {
+                  valueDim: 'close',
+                  xAxis: 512
+                }
+              ]
+            }
           });
         }
       });
@@ -181,6 +198,11 @@ export default {
           {
             type: 'inside',
             xAxisIndex: count_channel,
+            disabled: false,
+            startValue: 0,
+            endValue: 2560,
+            endValue: 2560,
+            moveOnMouseMove: true,
             // zoomOnMouseWheel: 'alt'
           },
           {
@@ -192,6 +214,8 @@ export default {
               height: 0.5,
               color: 'rgba(160, 25, 25, 1)',
             },
+            minSpan: 50,
+            maxSpan: 100
           },
         ],
         tooltip: {
@@ -237,7 +261,7 @@ export default {
       };
 
       // 將數量換算成秒 ,number : 有幾筆資料
-      function Convert_sec(number) {
+      function Convert_sec (number) {
         const dataArray = [];
         // 基底
         let base = end_time / number;
@@ -248,7 +272,7 @@ export default {
         }
         return dataArray;
       }
-      function select_brushType(params, whichLinx) {
+      function select_brushType (params, whichLinx) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
         let brushComponent = params.batch[0];
         console.log(brushComponent);
@@ -277,17 +301,17 @@ export default {
           '',
         ])[0];
 
-        console.log('coordRange_start',coordRange_start)
-        console.log('corrdRange_end',corrdRange_end)
+        console.log('coordRange_start', coordRange_start)
+        console.log('corrdRange_end', corrdRange_end)
 
         // 因為取出的座標是點數，要除上總點數，1秒512個點，有幾秒要乘上去
         select_start.value = (coordRange_start / (512 * end_time)) * end_time;
         select_end.value = (corrdRange_end / (512 * end_time)) * end_time;
 
-        if (select_start.value >10.0){
-            alert('起始位置超出範圍')
-        }else if (select_end.value >10.0){
-            alert('結束位置超出範圍')
+        if (select_start.value > 10.0) {
+          alert('起始位置超出範圍')
+        } else if (select_end.value > 10.0) {
+          alert('結束位置超出範圍')
         }
 
         ss_ing.value =
@@ -304,29 +328,39 @@ export default {
       mychart.on('brushSelected', function (params) {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
         let brushComponent = params.batch[0];
-        console.log('brushComponent',brushComponent)
+        console.log('brushComponent', brushComponent)
         // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (brushComponent.areas[0] !== undefined) {
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
           let type = brushComponent.areas[0].brushType;
           select_brushType(params, type);
         }
-
-        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment,@typescript-eslint/no-unsafe-member-access
-        let aa = brushComponent.areas[0]
-        console.log('5454',aa)
       });
+
+
+
+
+
+      // mychart.dispatchAction({
+      //   type:'brushSelected',
+      //   areas:[
+      //     {
+      //       brushType:'rect',
+      //       seriesIndex: 0,
+      //       range:[[782,86],[860,154]]
+      //     }
+      //   ]
+      // })
 
 
       option && mychart.setOption(option);
     });
 
 
-    return { channel, ss_ing, prompt: ref(false), select_start, select_end};
+    return { channel, ss_ing, prompt: ref(false), select_start, select_end };
   },
 };
 </script>
-
 
 <style scoped>
 .echarts-box {
